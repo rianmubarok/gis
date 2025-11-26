@@ -23,7 +23,7 @@ interface MapProps {
 
 const Map = ({
   locations = [],
-  mapStyle = "streets",
+  mapStyle = "light",
   selectedLocation = null,
   onFlyComplete,
 }: MapProps) => {

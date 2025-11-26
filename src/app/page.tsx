@@ -25,7 +25,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   // UI state
-  const [mapStyle, setMapStyle] = useState("streets");
+  const [mapStyle, setMapStyle] = useState("light");
   const [controlPanelOpen, setControlPanelOpen] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType>("layers");
   const [forceOpenCounter, setForceOpenCounter] = useState(0);
