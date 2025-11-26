@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS locations (
     name TEXT NOT NULL,
     category_id uuid REFERENCES categories(id) ON DELETE SET NULL,
     subcategory_id uuid REFERENCES subcategories(id) ON DELETE SET NULL,
-    latitude NUMERIC(10,6) NOT NULL,
-    longitude NUMERIC(10,6) NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
     geom GEOMETRY(POINT, 4326), -- Spatial column
     address TEXT,
     dusun TEXT,

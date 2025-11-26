@@ -1,45 +1,167 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { Location, Category } from "@/types";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import ControlPanel from "@/components/ControlPanel";
+import { CATEGORY_COLORS, ViewType } from "@/constants";
 
+// Lazy load Map component
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-gray-100 flex items-center justify-center">Loading Map...</div>,
+  loading: () => (
+    <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+      Loading Map...
+    </div>
+  ),
 });
 
 export default function Home() {
-  const [locations, setLocations] = useState<any[]>([]);
+  // Data state
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // UI state
+  const [mapStyle, setMapStyle] = useState("streets");
+  const [controlPanelOpen, setControlPanelOpen] = useState(true);
+  const [currentView, setCurrentView] = useState<ViewType>("layers");
+  const [forceOpenCounter, setForceOpenCounter] = useState(0);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
+    null
+  );
+
+  // Filter state
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(
+    []
+  );
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch data on mount
   useEffect(() => {
-    const fetchLocations = async () => {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*');
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [locationsRes, categoriesRes] = await Promise.all([
+          supabase.from("locations").select("*"),
+          supabase.from("categories").select("*, subcategories(*)"),
+        ]);
 
-      if (error) {
-        console.error("Error fetching locations:", error);
-      } else {
-        setLocations(data || []);
+        if (locationsRes.error) throw locationsRes.error;
+        if (categoriesRes.error) throw categoriesRes.error;
+
+        setLocations(locationsRes.data || []);
+        setCategories(categoriesRes.data || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchLocations();
+    fetchData();
+  }, []);
+
+  // Category color mapping
+  const categoryColorMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    categories.forEach((cat, index) => {
+      map[cat.id] = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+    });
+    return map;
+  }, [categories]);
+
+  // Filtered locations with colors
+  const filteredLocations = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+
+    return locations
+      .filter((loc) => {
+        const matchesSearch =
+          query === "" ||
+          loc.name?.toLowerCase().includes(query) ||
+          loc.description?.toLowerCase().includes(query) ||
+          loc.address?.toLowerCase().includes(query);
+
+        const matchesCategory =
+          selectedSubcategories.length === 0 ||
+          (loc.subcategory_id &&
+            selectedSubcategories.includes(loc.subcategory_id)) ||
+          (loc.category_id && selectedSubcategories.includes(loc.category_id));
+
+        const matchesCondition =
+          selectedConditions.length === 0 ||
+          (loc.condition && selectedConditions.includes(loc.condition));
+
+        return matchesSearch && matchesCategory && matchesCondition;
+      })
+      .map((loc) => ({
+        ...loc,
+        color:
+          (loc.category_id && categoryColorMap[loc.category_id]) || "#3b82f6",
+      }));
+  }, [
+    locations,
+    selectedSubcategories,
+    selectedConditions,
+    searchQuery,
+    categoryColorMap,
+  ]);
+
+  // Handlers
+  const handleViewChange = useCallback((view: ViewType) => {
+    setCurrentView(view);
+  }, []);
+
+  const handlePanelOpen = useCallback(() => {
+    setForceOpenCounter((prev) => prev + 1);
+  }, []);
+
+  const handleLocationClick = useCallback((location: Location) => {
+    setSelectedLocation(location);
+  }, []);
+
+  const handleFlyComplete = useCallback(() => {
+    // Optional: Clear selection after flying completes
+    // setSelectedLocation(null);
   }, []);
 
   return (
-    <main className="flex h-screen w-screen overflow-hidden bg-gray-50">
-      <Sidebar />
-      <ControlPanel />
-      <div className="flex-1 h-full relative">
-        <Map locations={locations} />
+    <main className="h-screen w-screen overflow-hidden bg-gray-50 relative">
+      <Sidebar
+        currentView={currentView}
+        onViewChange={handleViewChange}
+        onPanelOpen={handlePanelOpen}
+      />
 
-        {/* Floating Action Button for Mobile (Optional) */}
-        {/* <button className="absolute bottom-6 right-6 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors z-[1000]">
-          <Plus className="w-6 h-6" />
-        </button> */}
+      <ControlPanel
+        categories={categories}
+        locations={filteredLocations}
+        selectedSubcategories={selectedSubcategories}
+        onSubcategoriesChange={setSelectedSubcategories}
+        selectedConditions={selectedConditions}
+        onConditionsChange={setSelectedConditions}
+        loading={loading}
+        currentView={currentView}
+        currentStyle={mapStyle}
+        onStyleChange={setMapStyle}
+        onOpenChange={setControlPanelOpen}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        forceOpen={forceOpenCounter}
+        onLocationClick={handleLocationClick}
+      />
+
+      <div className="absolute left-16 top-0 right-0 bottom-0 h-full">
+        <Map
+          locations={filteredLocations}
+          mapStyle={mapStyle}
+          selectedLocation={selectedLocation}
+          onFlyComplete={handleFlyComplete}
+        />
       </div>
     </main>
   );
