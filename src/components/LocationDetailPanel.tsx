@@ -138,11 +138,20 @@ export const LocationDetailPanel = ({
                     </div>
                 )}
 
-                {/* Coordinates */}
-                <div className="pt-4 border-t border-gray-100">
+                {/* Coordinates and Last Updated */}
+                <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
                     <p className="text-xs text-gray-400 font-mono">
                         {location.latitude}, {location.longitude}
                     </p>
+                    {location.updated_at && (
+                        <p className="text-xs text-gray-400">
+                            Terakhir Diperbarui: {new Date(location.updated_at).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                            })}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

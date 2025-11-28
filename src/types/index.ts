@@ -25,4 +25,5 @@ export interface Location {
     contact?: string;
     color?: string;
     images?: string[];
+    updated_at?: string;
 }

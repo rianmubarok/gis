@@ -47,7 +47,7 @@ export default function Home() {
       try {
         setLoading(true);
         const [locationsRes, categoriesRes] = await Promise.all([
-          supabase.from("locations").select("*, location_images(image_url)"),
+          supabase.from("locations").select("*, location_images(image_url), updated_at"),
           supabase.from("categories").select("*, subcategories(*)"),
         ]);
 

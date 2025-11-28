@@ -31,6 +31,7 @@ interface Location {
     name: string;
   } | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export default function AdminDashboard() {
@@ -53,10 +54,11 @@ export default function AdminDashboard() {
           longitude,
           condition,
           created_at,
+          updated_at,
           category:categories(name)
         `
         )
-        .order("created_at", { ascending: false });
+        .order("updated_at", { ascending: false });
 
       if (error) throw error;
 
@@ -141,7 +143,7 @@ export default function AdminDashboard() {
                 <TableHeader>Kategori</TableHeader>
                 <TableHeader>Kondisi</TableHeader>
                 <TableHeader>Koordinat</TableHeader>
-                <TableHeader>Tanggal</TableHeader>
+                <TableHeader>Terakhir Diperbarui</TableHeader>
                 <TableHeader className="text-right">Aksi</TableHeader>
               </tr>
             </TableHead>
@@ -162,7 +164,7 @@ export default function AdminDashboard() {
                     {location.longitude.toFixed(5)}
                   </TableCell>
                   <TableCell className="text-gray-500">
-                    {new Date(location.created_at).toLocaleDateString("id-ID", {
+                    {new Date(location.updated_at || location.created_at).toLocaleDateString("id-ID", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
