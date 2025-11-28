@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import ControlPanel from "@/components/ControlPanel";
 import { CATEGORY_COLORS, ViewType } from "@/constants";
+import { LocationDetailPanel } from "@/components/LocationDetailPanel";
 
 // Lazy load Map component
 const Map = dynamic(() => import("@/components/Map"), {
@@ -90,7 +91,9 @@ export default function Home() {
           selectedSubcategories.length === 0 ||
           (loc.subcategory_id &&
             selectedSubcategories.includes(loc.subcategory_id)) ||
-          (loc.category_id && selectedSubcategories.includes(loc.category_id));
+          (!loc.subcategory_id &&
+            loc.category_id &&
+            selectedSubcategories.includes(loc.category_id));
 
         const matchesCondition =
           selectedConditions.length === 0 ||
@@ -129,6 +132,10 @@ export default function Home() {
     // setSelectedLocation(null);
   }, []);
 
+  const handleCloseDetail = useCallback(() => {
+    setSelectedLocation(null);
+  }, []);
+
   return (
     <main className="h-screen w-screen overflow-hidden bg-gray-50 relative">
       <Sidebar
@@ -161,8 +168,17 @@ export default function Home() {
           mapStyle={mapStyle}
           selectedLocation={selectedLocation}
           onFlyComplete={handleFlyComplete}
+          onLocationClick={handleLocationClick}
         />
       </div>
+
+      {selectedLocation && (
+        <LocationDetailPanel
+          location={selectedLocation}
+          categories={categories}
+          onClose={handleCloseDetail}
+        />
+      )}
     </main>
   );
 }

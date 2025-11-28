@@ -36,4 +36,4 @@ export const MAP_STYLES = [
 ] as const;
 
 // View types
-export type ViewType = "layers" | "list" | "admin" | "settings";
+export type ViewType = "layers" | "list" | "admin" | "settings" | "statistics";

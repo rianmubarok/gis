@@ -19,6 +19,7 @@ interface MapProps {
   mapStyle?: string;
   selectedLocation?: Location | null;
   onFlyComplete?: () => void;
+  onLocationClick?: (location: Location) => void;
 }
 
 const Map = ({
@@ -26,6 +27,7 @@ const Map = ({
   mapStyle = "light",
   selectedLocation = null,
   onFlyComplete,
+  onLocationClick,
 }: MapProps) => {
   const [geoJsonData, setGeoJsonData] = useState<GeoJsonObject | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
@@ -82,6 +84,7 @@ const Map = ({
           location={location}
           zoom={zoom}
           isSelected={selectedLocation?.id === location.id}
+          onClick={onLocationClick}
         />
       ))}
     </MapContainer>

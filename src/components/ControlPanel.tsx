@@ -13,11 +13,13 @@ import { LayersView } from "./ControlPanel/LayersView";
 import { SettingsView } from "./ControlPanel/SettingsView";
 import { AdminSection } from "./ControlPanel/AdminSection";
 import { ListView } from "./ControlPanel/ListView";
+import { StatisticsView } from "./ControlPanel/StatisticsView";
 
 // Panel header configuration
 const PANEL_HEADERS: Record<ViewType, { title: string; subtitle: string }> = {
   layers: { title: "SIG Jambu Timur", subtitle: "Infrastruktur & Fasilitas" },
   list: { title: "Daftar Lokasi", subtitle: "Detail Infrastruktur" },
+  statistics: { title: "Statistik Desa", subtitle: "Data & Informasi" },
   admin: { title: "Admin", subtitle: "Status & Akses" },
   settings: { title: "Pengaturan Peta", subtitle: "Tampilan & Gaya" },
 };
@@ -137,9 +139,8 @@ const ControlPanel = ({
 
       {/* Panel Container */}
       <div
-        className={`${
-          isOpen ? "w-64" : "w-0"
-        } fixed left-16 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-40 shadow-lg transition-all duration-300 overflow-hidden`}
+        className={`${isOpen ? "w-64" : "w-0"
+          } fixed left-16 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-40 shadow-lg transition-all duration-300 overflow-hidden`}
       >
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
@@ -163,6 +164,7 @@ const ControlPanel = ({
               onSearchChange={(query) => onSearchChange?.(query)}
               onReset={handleReset}
               onSubcategoryChange={handleSubcategoryChange}
+              onSubcategoriesChange={onSubcategoriesChange}
               onConditionChange={handleConditionChange}
             />
           )}
@@ -172,6 +174,9 @@ const ControlPanel = ({
               loading={loading}
               onLocationClick={onLocationClick}
             />
+          )}
+          {currentView === "statistics" && (
+            <StatisticsView locations={locations} categories={categories} />
           )}
           {currentView === "admin" && <AdminSection />}
           {currentView === "settings" && (

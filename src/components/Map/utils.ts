@@ -12,18 +12,21 @@ export const createMarkerIcon = (
   isSelected: boolean = false
 ): L.DivIcon => {
   const anchor = size / 2;
-  const strokeWidth = isSelected ? 3 : 0;
-  const strokeColor = isSelected ? "#1d4ed8" : "none";
 
-  const svgIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" fill="${color}" opacity="0.9" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
-      <circle cx="12" cy="12" r="5" fill="#fff"/>
-    </svg>`;
+  // We use a div structure to enable the CSS-based fill animation
+  // The 'marker-wrapper' will handle the border and shape
+  // The 'marker-fill' will handle the rising background
+  // The 'marker-icon' (inner circle) will sit on top
+  const html = `
+    <div class="marker-wrapper ${isSelected ? "selected" : ""}" style="--marker-color: ${color}; width: ${size}px; height: ${size}px;">
+      <div class="marker-fill"></div>
+      <div class="marker-icon"></div>
+    </div>
+  `;
 
   return L.divIcon({
-    className: `custom-map-marker ${isSelected ? "selected" : ""}`,
-    html: svgIcon,
+    className: "custom-map-marker-container", // Changed class name to avoid conflicts with old styles if any
+    html: html,
     iconSize: [size, size],
     iconAnchor: [anchor, anchor],
     popupAnchor: [0, -anchor],
@@ -31,10 +34,10 @@ export const createMarkerIcon = (
 };
 
 export const getMarkerSize = (zoom: number): number => {
-  if (zoom < 12) return 8;
-  if (zoom < 14) return 16;
-  if (zoom < 16) return 22;
-  return 28;
+  if (zoom < 12) return 6;
+  if (zoom < 14) return 12;
+  if (zoom < 16) return 18;
+  return 24;
 };
 
 export const parseCoordinate = (value: number | string): number | null => {

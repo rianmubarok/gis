@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Marker, Popup } from "react-leaflet";
+import { Marker, Tooltip } from "react-leaflet";
 import { Location } from "@/types";
 import { createMarkerIcon, getMarkerSize, parseCoordinate } from "./utils";
 
@@ -15,7 +15,8 @@ export const LocationMarker = ({
   location,
   zoom,
   isSelected = false,
-}: LocationMarkerProps) => {
+  onClick,
+}: LocationMarkerProps & { onClick?: (location: Location) => void }) => {
   const lat = parseCoordinate(location.latitude);
   const lng = parseCoordinate(location.longitude);
 
@@ -25,26 +26,36 @@ export const LocationMarker = ({
     [location.color, size, isSelected]
   );
 
+  const eventHandlers = useMemo(
+    () => ({
+      click: () => {
+        onClick?.(location);
+      },
+    }),
+    [onClick, location]
+  );
+
   if (lat === null || lng === null) return null;
 
   return (
-    <Marker position={[lat, lng]} icon={icon}>
-      <Popup>
-        <div className="p-1 font-sans">
-          <h3 className="font-bold text-sm">{location.name}</h3>
-          {location.description && (
-            <p className="text-xs mt-1">{location.description}</p>
-          )}
-          {location.address && (
-            <p className="text-xs text-gray-500 mt-1">{location.address}</p>
-          )}
-          {location.condition && (
-            <span className="inline-block text-xs bg-gray-100 px-2 py-0.5 rounded mt-1">
-              {location.condition}
-            </span>
-          )}
+    <Marker position={[lat, lng]} icon={icon} eventHandlers={eventHandlers}>
+      <Tooltip
+        direction="top"
+        offset={[0, -size / 2 - 10]}
+        opacity={1}
+        className="transparent-tooltip"
+      >
+        <div
+          className="custom-tooltip-content"
+          style={
+            {
+              "--tooltip-bg": location.color || "#3b82f6",
+            } as React.CSSProperties
+          }
+        >
+          <span className="text-white">{location.name}</span>
         </div>
-      </Popup>
+      </Tooltip>
     </Marker>
   );
 };

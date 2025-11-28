@@ -7,6 +7,7 @@ import {
   Layers,
   Settings,
   List,
+  ChartColumnBig,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback } from "react";
@@ -22,8 +23,8 @@ interface SidebarProps {
 const NAV_ITEMS: { view: ViewType; icon: typeof Layers; title: string }[] = [
   { view: "layers", icon: Layers, title: "Layer & Filter" },
   { view: "list", icon: List, title: "Daftar Lokasi" },
+  { view: "statistics", icon: ChartColumnBig, title: "Statistik" },
   { view: "admin", icon: User, title: "Admin" },
-  { view: "settings", icon: Settings, title: "Pengaturan" },
 ];
 
 const Sidebar = ({
@@ -56,11 +57,10 @@ const Sidebar = ({
           <button
             key={view}
             onClick={() => handleClick(view)}
-            className={`p-3 rounded-xl transition-colors cursor-pointer ${
-              currentView === view
+            className={`p-3 rounded-xl transition-colors cursor-pointer ${currentView === view
                 ? "bg-blue-50 text-blue-600"
                 : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-            }`}
+              }`}
             title={title}
           >
             <Icon className="w-5 h-5" />
@@ -68,8 +68,21 @@ const Sidebar = ({
         ))}
       </nav>
 
-      {/* Menu Button */}
-      <div className="mt-auto">
+      {/* Bottom Actions */}
+      <div className="mt-auto flex flex-col gap-6 w-full items-center">
+        {/* Settings */}
+        <button
+          onClick={() => handleClick("settings")}
+          className={`p-3 rounded-xl transition-colors cursor-pointer ${currentView === "settings"
+              ? "bg-blue-50 text-blue-600"
+              : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+            }`}
+          title="Pengaturan"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+
+        {/* Menu Button */}
         <button className="p-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors cursor-pointer">
           <Menu className="w-5 h-5" />
         </button>

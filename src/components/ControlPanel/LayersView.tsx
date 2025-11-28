@@ -1,8 +1,9 @@
 "use client";
 
-import { Search, Filter, Layers } from "lucide-react";
+import { Search, Filter, Layers, ChevronDown, ChevronRight } from "lucide-react";
 import { Category } from "@/types";
 import { CONDITION_FILTERS } from "@/constants";
+import { useState, useMemo } from "react";
 
 interface LayersViewProps {
   categories: Category[];
@@ -13,6 +14,7 @@ interface LayersViewProps {
   onSearchChange: (query: string) => void;
   onReset: () => void;
   onSubcategoryChange: (id: string) => void;
+  onSubcategoriesChange: (ids: string[]) => void;
   onConditionChange: (condition: string) => void;
 }
 
@@ -25,6 +27,7 @@ export const LayersView = ({
   onSearchChange,
   onReset,
   onSubcategoryChange,
+  onSubcategoriesChange,
   onConditionChange,
 }: LayersViewProps) => {
   return (
@@ -66,6 +69,32 @@ export const LayersView = ({
                 category={category}
                 selectedSubcategories={selectedSubcategories}
                 onSubcategoryChange={onSubcategoryChange}
+                onCategoryToggle={(cat, isChecked) => {
+                  if (cat.subcategories && cat.subcategories.length > 0) {
+                    const subIds = cat.subcategories.map((s) => s.id);
+                    // Also include the category ID itself to handle items with null subcategory
+                    const allIds = [...subIds, cat.id];
+
+                    if (isChecked) {
+                      // Add all subcategories + category ID that are not already selected
+                      const toAdd = allIds.filter(
+                        (id) => !selectedSubcategories.includes(id)
+                      );
+                      onSubcategoriesChange([
+                        ...selectedSubcategories,
+                        ...toAdd,
+                      ]);
+                    } else {
+                      // Remove all subcategories + category ID
+                      const newSelected = selectedSubcategories.filter(
+                        (id) => !allIds.includes(id)
+                      );
+                      onSubcategoriesChange(newSelected);
+                    }
+                  } else {
+                    onSubcategoryChange(cat.id);
+                  }
+                }}
               />
             ))}
             {categories.length === 0 && (
@@ -91,11 +120,10 @@ export const LayersView = ({
             <button
               key={status}
               onClick={() => onConditionChange(status)}
-              className={`px-2.5 py-1 text-[10px] font-medium rounded-full transition-colors cursor-pointer ${
-                selectedConditions.includes(status)
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+              className={`px-2.5 py-1 text-[10px] font-medium rounded-full transition-colors cursor-pointer ${selectedConditions.includes(status)
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
             >
               {status}
             </button>
@@ -111,40 +139,103 @@ interface CategoryItemProps {
   category: Category;
   selectedSubcategories: string[];
   onSubcategoryChange: (id: string) => void;
+  onCategoryToggle: (category: Category, isChecked: boolean) => void;
 }
 
 const CategoryItem = ({
   category,
   selectedSubcategories,
   onSubcategoryChange,
+  onCategoryToggle,
 }: CategoryItemProps) => {
-  const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+  const [isExpanded, setIsExpanded] = useState(true);
+  const hasSubcategories =
+    category.subcategories && category.subcategories.length > 0;
+
+  // Check if all subcategories are selected
+  const isAllSelected = useMemo(() => {
+    if (!hasSubcategories) {
+      return selectedSubcategories.includes(category.id);
+    }
+    // Check if all subcategories AND the category itself (for null subcategory items) are selected
+    return (
+      category.subcategories.every((sub) =>
+        selectedSubcategories.includes(sub.id)
+      ) && selectedSubcategories.includes(category.id)
+    );
+  }, [category, selectedSubcategories, hasSubcategories]);
+
+  // Check if some but not all subcategories are selected
+  const isIndeterminate = useMemo(() => {
+    if (!hasSubcategories) return false;
+    const subIds = category.subcategories.map((s) => s.id);
+    // Include category.id in the count of "selectable items"
+    const allIds = [...subIds, category.id];
+    const selectedCount = allIds.filter((id) =>
+      selectedSubcategories.includes(id)
+    ).length;
+    return selectedCount > 0 && selectedCount < allIds.length;
+  }, [category, selectedSubcategories, hasSubcategories]);
+
+  const handleCategoryClick = () => {
+    onCategoryToggle(category, !isAllSelected);
+  };
 
   return (
-    <div>
-      <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-        {category.name}
-      </h3>
-      <div className="space-y-1.5">
-        {hasSubcategories ? (
-          category.subcategories.map((sub) => (
-            <CheckboxItem
-              key={sub.id}
-              id={sub.id}
-              label={sub.name}
-              checked={selectedSubcategories.includes(sub.id)}
-              onChange={() => onSubcategoryChange(sub.id)}
-            />
-          ))
-        ) : (
-          <CheckboxItem
-            id={category.id}
-            label={`Semua ${category.name}`}
-            checked={selectedSubcategories.includes(category.id)}
-            onChange={() => onSubcategoryChange(category.id)}
+    <div className="border border-gray-100 rounded-lg overflow-hidden">
+      <div className="flex items-center justify-between bg-gray-50 p-2">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            checked={isAllSelected}
+            ref={(input) => {
+              if (input) input.indeterminate = isIndeterminate;
+            }}
+            onChange={handleCategoryClick}
           />
+          <span className="text-xs font-semibold text-gray-700">
+            {category.name}
+          </span>
+        </div>
+        {hasSubcategories && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-200 transition-colors"
+          >
+            {isExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
+          </button>
         )}
       </div>
+
+      {isExpanded && (
+        <div className="p-2 space-y-1 bg-white">
+          {hasSubcategories ? (
+            <>
+              {/* Optional: Add a specific checkbox for "Uncategorized" items if needed, 
+                  but for now we just rely on the parent checkbox to toggle category.id */}
+              {category.subcategories.map((sub) => (
+                <CheckboxItem
+                  key={sub.id}
+                  id={sub.id}
+                  label={sub.name}
+                  checked={selectedSubcategories.includes(sub.id)}
+                  onChange={() => onSubcategoryChange(sub.id)}
+                  className="ml-5"
+                />
+              ))}
+            </>
+          ) : (
+            <div className="ml-5 text-[10px] text-gray-400 italic">
+              Tidak ada sub-kategori
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -155,17 +246,25 @@ interface CheckboxItemProps {
   label: string;
   checked: boolean;
   onChange: () => void;
+  className?: string;
 }
 
-const CheckboxItem = ({ label, checked, onChange }: CheckboxItemProps) => (
-  <label className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-lg cursor-pointer group">
+const CheckboxItem = ({
+  label,
+  checked,
+  onChange,
+  className = "",
+}: CheckboxItemProps) => (
+  <label
+    className={`flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer group ${className}`}
+  >
     <input
       type="checkbox"
       className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
       checked={checked}
       onChange={onChange}
     />
-    <span className="text-xs text-gray-700 group-hover:text-gray-900">
+    <span className="text-xs text-gray-600 group-hover:text-gray-900">
       {label}
     </span>
   </label>
