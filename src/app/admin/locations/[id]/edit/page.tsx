@@ -49,7 +49,27 @@ export default function EditLocationPage({
     contact: "",
     description: "",
     condition: "Baik",
+    images: [] as string[],
   });
+
+  const [imageInput, setImageInput] = useState("");
+
+  const handleAddImage = () => {
+    if (imageInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, imageInput.trim()]
+      }));
+      setImageInput("");
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
 
   useEffect(() => {
     Promise.all([fetchCategories(), fetchLocation()]);
@@ -72,7 +92,7 @@ export default function EditLocationPage({
     try {
       const { data, error } = await supabase
         .from("locations")
-        .select("*")
+        .select("*, location_images(image_url)")
         .eq("id", id)
         .single();
 
@@ -90,6 +110,7 @@ export default function EditLocationPage({
           contact: data.contact || "",
           description: data.description || "",
           condition: data.condition || "Baik",
+          images: data.location_images?.map((img: any) => img.image_url) || [],
         });
       }
     } catch (error) {
@@ -115,7 +136,8 @@ export default function EditLocationPage({
     setSaving(true);
 
     try {
-      const { error } = await supabase
+      // 1. Update location details
+      const { error: locationError } = await supabase
         .from("locations")
         .update({
           name: formData.name,
@@ -131,7 +153,30 @@ export default function EditLocationPage({
         })
         .eq("id", id);
 
-      if (error) throw error;
+      if (locationError) throw locationError;
+
+      // 2. Update images
+      // First, delete existing images
+      const { error: deleteError } = await supabase
+        .from("location_images")
+        .delete()
+        .eq("location_id", id);
+
+      if (deleteError) throw deleteError;
+
+      // Then insert new images
+      if (formData.images.length > 0) {
+        const imageInserts = formData.images.map((url) => ({
+          location_id: id,
+          image_url: url,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("location_images")
+          .insert(imageInserts);
+
+        if (insertError) throw insertError;
+      }
 
       router.push("/admin");
       router.refresh();
@@ -274,6 +319,52 @@ export default function EditLocationPage({
               value={formData.description}
               onChange={handleChange}
             />
+          </FormField>
+
+          <FormField label="Foto Lokasi (URL)">
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  value={imageInput}
+                  onChange={(e) => setImageInput(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddImage();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAddImage} variant="secondary">
+                  Tambah
+                </Button>
+              </div>
+
+              {formData.images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                  {formData.images.map((url, index) => (
+                    <div key={index} className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      <img
+                        src={url}
+                        alt={`Lokasi ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Invalid+Image';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </FormField>
 
           <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">

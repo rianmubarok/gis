@@ -43,7 +43,27 @@ export default function CreateLocationPage() {
     contact: "",
     description: "",
     condition: "Baik",
+    images: [] as string[],
   });
+
+  const [imageInput, setImageInput] = useState("");
+
+  const handleAddImage = () => {
+    if (imageInput.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, imageInput.trim()]
+      }));
+      setImageInput("");
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
 
   useEffect(() => {
     fetchCategories();
@@ -76,22 +96,41 @@ export default function CreateLocationPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("locations").insert([
-        {
-          name: formData.name,
-          category_id: formData.category_id || null,
-          subcategory_id: formData.subcategory_id || null,
-          latitude: parseFloat(formData.latitude),
-          longitude: parseFloat(formData.longitude),
-          address: formData.address,
-          dusun: formData.dusun,
-          contact: formData.contact,
-          description: formData.description,
-          condition: formData.condition,
-        },
-      ]);
+      // 1. Insert location data
+      const { data: locationData, error: locationError } = await supabase
+        .from("locations")
+        .insert([
+          {
+            name: formData.name,
+            category_id: formData.category_id || null,
+            subcategory_id: formData.subcategory_id || null,
+            latitude: parseFloat(formData.latitude),
+            longitude: parseFloat(formData.longitude),
+            address: formData.address,
+            dusun: formData.dusun,
+            contact: formData.contact,
+            description: formData.description,
+            condition: formData.condition,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (locationError) throw locationError;
+
+      // 2. Insert images if any
+      if (formData.images.length > 0 && locationData) {
+        const imageInserts = formData.images.map((url) => ({
+          location_id: locationData.id,
+          image_url: url,
+        }));
+
+        const { error: imagesError } = await supabase
+          .from("location_images")
+          .insert(imageInserts);
+
+        if (imagesError) throw imagesError;
+      }
 
       router.push("/admin");
       router.refresh();
@@ -245,6 +284,52 @@ export default function CreateLocationPage() {
               onChange={handleChange}
               placeholder="Deskripsi tambahan..."
             />
+          </FormField>
+
+          <FormField label="Foto Lokasi (URL)">
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  value={imageInput}
+                  onChange={(e) => setImageInput(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddImage();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAddImage} variant="secondary">
+                  Tambah
+                </Button>
+              </div>
+
+              {formData.images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                  {formData.images.map((url, index) => (
+                    <div key={index} className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      <img
+                        src={url}
+                        alt={`Lokasi ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Invalid+Image';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </FormField>
 
           <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">

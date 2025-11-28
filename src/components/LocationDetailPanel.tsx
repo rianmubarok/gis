@@ -36,7 +36,7 @@ export const LocationDetailPanel = ({
             <div className="bg-blue-600 p-6 text-white relative">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1 hover:bg-blue-700 rounded-full transition-colors"
+                    className="absolute top-4 right-4 p-1 hover:bg-blue-700 rounded-full transition-colors cursor-pointer"
                 >
                     <X size={20} />
                 </button>
@@ -50,10 +50,10 @@ export const LocationDetailPanel = ({
                     <div className="flex items-center gap-2">
                         <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${location.condition === "Baik"
-                                    ? "bg-green-100 text-green-700"
-                                    : location.condition === "Rusak Ringan"
-                                        ? "bg-yellow-100 text-yellow-700"
-                                        : "bg-red-100 text-red-700"
+                                ? "bg-green-100 text-green-700"
+                                : location.condition === "Rusak Ringan"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-red-100 text-red-700"
                                 }`}
                         >
                             {location.condition}
@@ -116,6 +116,27 @@ export const LocationDetailPanel = ({
                         </div>
                     )}
                 </div>
+
+                {/* Images Section */}
+                {location.images && location.images.length > 0 && (
+                    <div className="space-y-3 pt-4 border-t border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">Foto Lokasi</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {location.images.map((url, index) => (
+                                <div key={index} className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.open(url, '_blank')}>
+                                    <img
+                                        src={url}
+                                        alt={`${location.name} - ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Invalid+Image';
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Coordinates */}
                 <div className="pt-4 border-t border-gray-100">

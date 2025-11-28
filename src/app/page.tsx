@@ -47,14 +47,19 @@ export default function Home() {
       try {
         setLoading(true);
         const [locationsRes, categoriesRes] = await Promise.all([
-          supabase.from("locations").select("*"),
+          supabase.from("locations").select("*, location_images(image_url)"),
           supabase.from("categories").select("*, subcategories(*)"),
         ]);
 
         if (locationsRes.error) throw locationsRes.error;
         if (categoriesRes.error) throw categoriesRes.error;
 
-        setLocations(locationsRes.data || []);
+        const formattedLocations = (locationsRes.data || []).map((loc: any) => ({
+          ...loc,
+          images: loc.location_images?.map((img: any) => img.image_url) || [],
+        }));
+
+        setLocations(formattedLocations);
         setCategories(categoriesRes.data || []);
       } catch (error) {
         console.error("Error fetching data:", error);

@@ -24,4 +24,5 @@ export interface Location {
     dusun?: string;
     contact?: string;
     color?: string;
+    images?: string[];
 }

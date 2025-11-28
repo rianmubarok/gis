@@ -230,9 +230,7 @@ const CategoryItem = ({
               ))}
             </>
           ) : (
-            <div className="ml-5 text-[10px] text-gray-400 italic">
-              Tidak ada sub-kategori
-            </div>
+            null
           )}
         </div>
       )}
