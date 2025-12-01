@@ -1,11 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { Lock, User } from "lucide-react";
 
-export default function LoginPage() {
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+interface LoginPageProps {
+  searchParams: { error?: string };
+}
+
+export default function LoginPage({ searchParams }: LoginPageProps) {
+  const error = searchParams.error;
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
