@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Plus, Edit, Trash2, Layers } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import {
   LinkButton,
   Badge,
   IconButton,
+  ConfirmIconButton,
   Table,
   TableHead,
   TableBody,
@@ -20,6 +21,7 @@ import {
   TableCell,
   TableHeader,
 } from "@/components/Admin";
+import { useSupabaseQuery } from "@/hooks/useSupabaseQuery";
 
 interface Category {
   id: string;
@@ -29,41 +31,28 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*, subcategories(count)");
 
-  useEffect(() => {
-    fetchCategories();
+    if (error) throw error;
+    return data || [];
   }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*, subcategories(count)");
-
-      if (error) throw error;
-      if (data) setCategories(data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: categoriesData,
+    loading,
+    refetch,
+  } = useSupabaseQuery<Category[]>(fetchCategories);
+  const categories = categoriesData || [];
 
   const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        "Apakah Anda yakin ingin menghapus kategori ini? Semua subkategori terkait akan ikut terhapus."
-      )
-    )
-      return;
-
     try {
       const { error } = await supabase.from("categories").delete().eq("id", id);
 
       if (error) throw error;
-      fetchCategories();
+      await refetch();
     } catch (error) {
       console.error("Error deleting category:", error);
       alert("Gagal menghapus kategori.");
@@ -126,12 +115,13 @@ export default function CategoriesPage() {
                           <Edit className="w-4 h-4" />
                         </IconButton>
                       </Link>
-                      <IconButton
+                      <ConfirmIconButton
                         variant="danger"
-                        onClick={() => handleDelete(category.id)}
+                        confirmMessage="Apakah Anda yakin ingin menghapus kategori ini? Semua subkategori terkait akan ikut terhapus."
+                        onConfirm={() => handleDelete(category.id)}
                       >
                         <Trash2 className="w-4 h-4" />
-                      </IconButton>
+                      </ConfirmIconButton>
                     </div>
                   </TableCell>
                 </TableRow>

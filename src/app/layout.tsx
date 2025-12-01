@@ -50,7 +50,7 @@ export default function RootLayout({
         </div>
 
         {/* Main Content - Only visible on desktop */}
-        <div className="hidden lg:block h-screen w-screen overflow-hidden">
+        <div className="hidden lg:block min-h-screen w-screen overflow-auto">
           {children}
         </div>
       </body>

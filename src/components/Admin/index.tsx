@@ -2,7 +2,13 @@
 
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { ReactNode } from "react";
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 
 // Page Header
 interface PageHeaderProps {
@@ -121,7 +127,7 @@ export const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${variants[variant]} ${className}`}
     >
       {children}
     </button>
@@ -150,7 +156,7 @@ export const LinkButton = ({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${variants[variant]}`}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all cursor-pointer ${variants[variant]}`}
     >
       {children}
     </Link>
@@ -189,7 +195,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input = ({ className = "", ...props }: InputProps) => (
   <input
     {...props}
-    className={`w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-400 ${className}`}
+    className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all ${className}`}
   />
 );
 
@@ -202,7 +208,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export const Select = ({ children, className = "", ...props }: SelectProps) => (
   <select
     {...props}
-    className={`w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:text-gray-400 ${className}`}
+    className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:text-gray-400 ${className}`}
   >
     {children}
   </select>
@@ -217,7 +223,7 @@ interface TextareaProps
 export const Textarea = ({ className = "", ...props }: TextareaProps) => (
   <textarea
     {...props}
-    className={`w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none placeholder:text-gray-400 ${className}`}
+    className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none ${className}`}
   />
 );
 
@@ -246,7 +252,7 @@ export const Badge = ({ children, variant = "blue" }: BadgeProps) => {
 };
 
 // Icon Button
-interface IconButtonProps {
+export interface IconButtonProps {
   onClick?: () => void;
   variant?: "default" | "danger";
   children: ReactNode;
@@ -267,11 +273,29 @@ export const IconButton = ({
   return (
     <button
       onClick={onClick}
-      className={`p-2 rounded-lg transition-all ${variants[variant]} ${className}`}
+      className={`p-2 rounded-lg transition-all cursor-pointer ${variants[variant]} ${className}`}
     >
       {children}
     </button>
   );
+};
+
+interface ConfirmIconButtonProps extends Omit<IconButtonProps, "onClick"> {
+  confirmMessage: string;
+  onConfirm: () => void | Promise<void>;
+}
+
+export const ConfirmIconButton = ({
+  confirmMessage,
+  onConfirm,
+  ...props
+}: ConfirmIconButtonProps) => {
+  const handleClick = async () => {
+    if (!confirm(confirmMessage)) return;
+    await onConfirm();
+  };
+
+  return <IconButton {...props} onClick={handleClick} />;
 };
 
 // Table
@@ -314,3 +338,309 @@ export const TableHeader = ({
   children: ReactNode;
   className?: string;
 }) => <th className={`px-6 py-4 ${className}`}>{children}</th>;
+
+export interface LocationFormCategory {
+  id: string;
+  name: string;
+  subcategories: { id: string; name: string }[];
+}
+
+export interface LocationFormValues {
+  name: string;
+  category_id: string;
+  subcategory_id: string;
+  latitude: string;
+  longitude: string;
+  address: string;
+  dusun: string;
+  contact: string;
+  description: string;
+  condition: string;
+  images: string[];
+}
+
+export const defaultLocationFormValues: LocationFormValues = {
+  name: "",
+  category_id: "",
+  subcategory_id: "",
+  latitude: "",
+  longitude: "",
+  address: "",
+  dusun: "",
+  contact: "",
+  description: "",
+  condition: "Baik",
+  images: [],
+};
+
+interface LocationFormProps {
+  initialValues: LocationFormValues;
+  categories: LocationFormCategory[];
+  onSubmit: (values: LocationFormValues) => void | Promise<void>;
+  submitting?: boolean;
+  submitLabel?: string;
+  submittingLabel?: string;
+  submitIcon?: ReactNode;
+  cancelHref: string;
+  manageCategoriesHref?: string;
+}
+
+export const LocationForm = ({
+  initialValues,
+  categories,
+  onSubmit,
+  submitting = false,
+  submitLabel = "Simpan",
+  submittingLabel = "Menyimpan...",
+  submitIcon,
+  cancelHref,
+  manageCategoriesHref,
+}: LocationFormProps) => {
+  const [formData, setFormData] = useState<LocationFormValues>(initialValues);
+  const [imageInput, setImageInput] = useState("");
+
+  useEffect(() => {
+    setFormData(initialValues);
+  }, [initialValues]);
+
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddImage = () => {
+    if (!imageInput.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, imageInput.trim()],
+    }));
+    setImageInput("");
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit(formData);
+  };
+
+  const selectedCategory = categories.find(
+    (cat) => cat.id === formData.category_id
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField label="Nama Lokasi" required>
+          <Input
+            type="text"
+            name="name"
+            required
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Contoh: Kantor Balai Desa"
+          />
+        </FormField>
+
+        <FormField label="Kondisi">
+          <Select
+            name="condition"
+            value={formData.condition}
+            onChange={handleChange}
+          >
+            <option value="Baik">Baik</option>
+            <option value="Rusak Ringan">Rusak Ringan</option>
+            <option value="Rusak Berat">Rusak Berat</option>
+          </Select>
+        </FormField>
+
+        <FormField label="Kategori">
+          <div className="flex gap-2">
+            <Select
+              name="category_id"
+              value={formData.category_id}
+              onChange={handleChange}
+              className="flex-1"
+            >
+              <option value="">Pilih Kategori</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </Select>
+            {manageCategoriesHref && (
+              <Link
+                href={manageCategoriesHref}
+                target="_blank"
+                className="px-3 py-2.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors whitespace-nowrap"
+              >
+                Kelola
+              </Link>
+            )}
+          </div>
+        </FormField>
+
+        <FormField label="Sub Kategori">
+          <Select
+            name="subcategory_id"
+            value={formData.subcategory_id}
+            onChange={handleChange}
+            disabled={!selectedCategory}
+          >
+            <option value="">Pilih Sub Kategori</option>
+            {selectedCategory?.subcategories.map((sub) => (
+              <option key={sub.id} value={sub.id}>
+                {sub.name}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+
+        <FormField label="Dusun">
+          <Input
+            type="text"
+            name="dusun"
+            value={formData.dusun}
+            onChange={handleChange}
+            placeholder="Nama Dusun"
+          />
+        </FormField>
+
+        <FormField label="Kontak / No. HP">
+          <Input
+            type="text"
+            name="contact"
+            value={formData.contact}
+            onChange={handleChange}
+            placeholder="08xxxxxxxxxx"
+          />
+        </FormField>
+
+        <FormField label="Latitude" required>
+          <Input
+            type="number"
+            name="latitude"
+            step="any"
+            required
+            value={formData.latitude}
+            onChange={handleChange}
+            placeholder="-6.535"
+          />
+        </FormField>
+
+        <FormField label="Longitude" required>
+          <Input
+            type="number"
+            name="longitude"
+            step="any"
+            required
+            value={formData.longitude}
+            onChange={handleChange}
+            placeholder="110.74"
+          />
+        </FormField>
+      </div>
+
+      <FormField label="Alamat Lengkap">
+        <Textarea
+          name="address"
+          rows={2}
+          value={formData.address}
+          onChange={handleChange}
+          placeholder="Alamat detail lokasi..."
+        />
+      </FormField>
+
+      <FormField label="Deskripsi">
+        <Textarea
+          name="description"
+          rows={3}
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Deskripsi tambahan..."
+        />
+      </FormField>
+
+      <FormField label="Foto Lokasi (URL)">
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              type="url"
+              value={imageInput}
+              onChange={(e) => setImageInput(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddImage();
+                }
+              }}
+            />
+            <Button type="button" onClick={handleAddImage} variant="secondary">
+              Tambah
+            </Button>
+          </div>
+
+          {formData.images.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              {formData.images.map((url, index) => (
+                <div
+                  key={index}
+                  className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200"
+                >
+                  <img
+                    src={url}
+                    alt={`Lokasi ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "https://placehold.co/600x400?text=Invalid+Image";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </FormField>
+
+      <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
+        <LinkButton href={cancelHref} variant="secondary">
+          Batal
+        </LinkButton>
+        <Button type="submit" disabled={submitting}>
+          {submitIcon}
+          {submitting ? submittingLabel : submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+};

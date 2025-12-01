@@ -27,3 +27,16 @@ export interface Location {
     images?: string[];
     updated_at?: string;
 }
+
+export interface LocationReport {
+    id: string;
+    location_id?: string;
+    full_name: string;
+    address: string;
+    phone: string;
+    condition: string;
+    image_url?: string;
+    description?: string;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+}

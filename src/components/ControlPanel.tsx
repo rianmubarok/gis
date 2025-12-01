@@ -11,7 +11,7 @@ import {
 } from "@/constants";
 import { LayersView } from "./ControlPanel/LayersView";
 import { SettingsView } from "./ControlPanel/SettingsView";
-import { AdminSection } from "./ControlPanel/AdminSection";
+import { ProfileSection } from "./ControlPanel/ProfileSection";
 import { ListView } from "./ControlPanel/ListView";
 import { StatisticsView } from "./ControlPanel/StatisticsView";
 
@@ -20,7 +20,7 @@ const PANEL_HEADERS: Record<ViewType, { title: string; subtitle: string }> = {
   layers: { title: "SIG Jambu Timur", subtitle: "Infrastruktur & Fasilitas" },
   list: { title: "Daftar Lokasi", subtitle: "Detail Infrastruktur" },
   statistics: { title: "Statistik Desa", subtitle: "Data & Informasi" },
-  admin: { title: "Admin", subtitle: "Status & Akses" },
+  profile: { title: "Profil", subtitle: "Akses Pengguna" },
   settings: { title: "Pengaturan Peta", subtitle: "Tampilan & Gaya" },
 };
 
@@ -165,7 +165,7 @@ const ControlPanel = ({
           {currentView === "statistics" && (
             <StatisticsView locations={locations} categories={categories} />
           )}
-          {currentView === "admin" && <AdminSection />}
+          {currentView === "profile" && <ProfileSection />}
           {currentView === "settings" && (
             <SettingsView
               currentStyle={currentStyle}

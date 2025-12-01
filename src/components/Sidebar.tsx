@@ -9,8 +9,8 @@ import {
   List,
   ChartColumnBig,
   LayoutDashboard,
-  Folder,
-  MapPin,
+  ClipboardList,
+  Plus,
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
@@ -32,14 +32,14 @@ const MAP_NAV_ITEMS: { view: ViewType; icon: typeof Layers; title: string }[] = 
   { view: "layers", icon: Layers, title: "Layer & Filter" },
   { view: "list", icon: List, title: "Daftar Lokasi" },
   { view: "statistics", icon: ChartColumnBig, title: "Statistik" },
-  { view: "admin", icon: User, title: "Admin" },
+  { view: "profile", icon: User, title: "Profil" },
 ];
 
 // Admin Navigation items
 const ADMIN_NAV_ITEMS = [
   { href: "/admin", icon: LayoutDashboard, title: "Dashboard" },
-  { href: "/admin/locations/create", icon: MapPin, title: "Lokasi" },
-  { href: "/admin/categories", icon: Folder, title: "Kategori" },
+  { href: "/admin/locations/create", icon: Plus, title: "Tambah Lokasi" },
+  { href: "/admin/reports", icon: ClipboardList, title: "Laporan" },
 ];
 
 const Sidebar = ({

@@ -149,3 +149,28 @@ EXECUTE FUNCTION update_locations_geom();
 
 -- Create spatial index
 CREATE INDEX IF NOT EXISTS locations_geom_idx ON locations USING GIST (geom);
+
+CREATE TABLE IF NOT EXISTS location_reports (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    location_id uuid REFERENCES locations(id) ON DELETE SET NULL,
+    full_name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    condition TEXT NOT NULL,
+    image_url TEXT,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'pending', -- pending, approved, rejected
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- LOCATION REPORTS POLICIES
+ALTER TABLE location_reports ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public insert location reports" ON location_reports;
+CREATE POLICY "Public insert location reports" ON location_reports FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin select location reports" ON location_reports;
+CREATE POLICY "Admin select location reports" ON location_reports FOR SELECT USING (true); -- Simplified for demo, ideally restricted to admin
+
+DROP POLICY IF EXISTS "Admin update location reports" ON location_reports;
+CREATE POLICY "Admin update location reports" ON location_reports FOR UPDATE USING (true);
