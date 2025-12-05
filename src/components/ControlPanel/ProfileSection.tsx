@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Shield, LogIn } from "lucide-react";
+import { TriangleAlert, Shield, LogIn, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -56,20 +56,19 @@ export const ProfileSection = () => {
         {!isAdmin && (
           <Link
             href="/report"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm"
           >
-            <User className="w-3.5 h-3.5" />
+            <TriangleAlert className="w-3.5 h-3.5" />
             <span>Lapor Pembaruan</span>
           </Link>
         )}
 
         <Link
           href={isAdmin ? "/admin" : "/login"}
-          className={`w-full flex items-center justify-center gap-2 px-3 py-2 ${
-            isAdmin
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          } text-xs font-medium rounded-lg transition-colors shadow-sm`}
+          className={`w-full flex items-center justify-center gap-2 px-3 py-2 ${isAdmin
+            ? "bg-blue-600 text-white hover:bg-blue-700"
+            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            } text-xs font-medium rounded-lg transition-colors shadow-sm`}
         >
           {isAdmin ? (
             <>

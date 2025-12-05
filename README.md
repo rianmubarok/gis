@@ -42,6 +42,22 @@ Objek yang dipetakan meliputi:
 
 ---
 
+## Live Demo
+
+Anda dapat langsung mencoba aplikasi ini melalui tautan berikut:
+[https://gis-seven-khaki.vercel.app/](https://gis-seven-khaki.vercel.app/)
+
+Silakan eksplorasi fitur-fitur yang tersedia:
+*   Melihat data lokasi pada peta.
+*   Melaporkan kondisi fasilitas sebagai warga.
+*   Login sebagai admin untuk mengelola data.
+
+**Kredensial Admin:**
+*   **Username:** `admin`
+*   **Password:** `admin123`
+
+---
+
 ## Teknologi yang Digunakan
 
 *   **Frontend**: [Next.js](https://nextjs.org/) (React Framework), [Tailwind CSS](https://tailwindcss.com/) (Styling).
